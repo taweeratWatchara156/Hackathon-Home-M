@@ -34,16 +34,17 @@ export default function JoinTripPage() {
     const updateRoomData = {
       hostCode,
       memberToAdd: {
-        fullName: currentUserData?.fullName,
-        username: currentUserData?.username,
-        imageUrl: currentUserData?.imageUrl,
-        clerkId: currentUserData?.clerkId,
-        email: currentUserData?.email,
+        fullName: currentUserData?.fullName as string,
+        username: currentUserData?.username as string,
+        imageUrl: currentUserData?.imageUrl as string,
+        clerkId: currentUserData?.clerkId as string,
+        email: currentUserData?.email as string,
       }
     };
 
     if (roomData) {
       await updateRoomMutation(updateRoomData)
+      route.push(`../join-trip/${hostCode}`)
     }
   }
 

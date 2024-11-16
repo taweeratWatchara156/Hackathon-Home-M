@@ -78,12 +78,32 @@ export const updateRoom = mutation({
 
     if (memberToRemove) {
       await ctx.db.patch(room._id, {
-        partyMembers: room.partyMembers.filter((member) => member !== memberToRemove),  // Remove member
+        partyMembers: room.partyMembers.filter((member) => member.clerkId !== memberToRemove.clerkId),  // Remove member
       });
     }
 
     if (Object.keys(otherFields).length > 0) {
       await ctx.db.patch(room._id, otherFields);
     }
+  },
+});
+
+export const deleteRoomByHostCode = mutation({
+  args: { hostCode: v.string() },
+  handler: async (ctx, args) => {
+    const { hostCode } = args;
+
+    // Find the room by hostCode
+    const room = await ctx.db
+      .query("rooms")
+      .withIndex("by_hostCode", (q) => q.eq("hostCode", hostCode))
+      .unique();
+
+    if (!room) {
+      throw new Error(`Room with hostCode ${hostCode} not found`);
+    }
+
+    // Delete the room
+    await ctx.db.delete(room._id);
   },
 });

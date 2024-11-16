@@ -1,19 +1,19 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import CryptoJS from 'crypto-js'
-import LoadingLogo from "@/app/components/LoadingLogo"
-import BackButton from "@/app/components/BackButton"
-import emptyUser from '../../../public/EmptyUser.png'
-import { useUser } from "@clerk/nextjs"
+import BackButton from '@/app/components/BackButton'
+import LoadingLogo from '@/app/components/LoadingLogo'
+import PartyMember from '@/app/components/PartyMember'
+import { api } from '@/convex/_generated/api'
+import { useMutation, useQuery } from 'convex/react'
+import { useRouter } from 'next/navigation'
+import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { useQuery } from "convex/react"
-import { api } from "@/convex/_generated/api"
-import React from 'react'
-import PartyMember from "@/app/components/PartyMember"
+import Link from 'next/link'
+import { useUser } from '@clerk/nextjs'
 
-export default function page({params}) {
+export default function Page({ params }) {
+    const {user} = useUser()
+    const updateRoomMutation = useMutation(api.room.updateRoom);
     const [partyName, setPartyName] = useState("")
     const [tripTitle, setTripTitle] = useState("")
     const [tripDescription, setTripDescription] = useState("")
@@ -23,12 +23,29 @@ export default function page({params}) {
     const [hostId, setHostId] = useState("")
 
     const route = useRouter();
-    const {hostCode} = React.use(params);
-    const host = null;
+    const { hostCode } = React.use(params);
     const roomData = useQuery(api.room.getRoomByHostCode, { hostCode })
+    const currentUserData = useQuery(api.user.getIn, { clerkId: user?.id as string })
+
+    const handleBack = async () => {
+        const updateRoomData = {
+            hostCode,
+            memberToRemove: {
+                fullName: currentUserData?.fullName as string,
+                username: currentUserData?.username as string,
+                imageUrl: currentUserData?.imageUrl as string,
+                clerkId: currentUserData?.clerkId as string,
+                email: currentUserData?.email as string,
+            }
+        };
+
+        if (roomData) {
+            await updateRoomMutation(updateRoomData)
+            route.push(`../`)
+        }
+    }
 
     useEffect(() => {
-
         if (roomData) {
             setTripTitle(roomData.tripTitle);
             setTripDescription(roomData.tripDescription);
@@ -40,20 +57,20 @@ export default function page({params}) {
         }
     }, [roomData]);
 
-    
+
     const hostData = useQuery(api.user.getIn, { clerkId: hostId })
 
     if (!roomData || !hostData) return <LoadingLogo />
 
     return (
         <div className='flex flex-col w-full h-full p-5 gap-[20px]'>
-            <BackButton />
+            <button className='flex items-center gap-[10px] w-fit active:scale-95 duration-150' onClick={() => handleBack()}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="15" viewBox="0 0 9 15" fill="none">
+                    <path d="M8 1L1 7.5L8 14" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
 
-            {/* Trip Code */}
-            <div className='flex flex-col mt-[10%]'>
-                <span className="text-sm mb-[-5px] text-white">YOUR TRIP CODE : </span>
-                <h1 className="text-5xl text-white font-bold">{hostCode}</h1>
-            </div>
+                <h1 className='font-semibold text-white'>Back</h1>
+            </button>
 
             {/* Form */}
             <div className="flex flex-col bg-white h-fit rounded-lg p-5">
@@ -93,7 +110,7 @@ export default function page({params}) {
                         {
                             partyMembers.map((member, index) => {
                                 return (
-                                    <PartyMember key={index} imageUrl={member.imageUrl} username={member?.username}/>
+                                    <PartyMember key={index} imageUrl={member.imageUrl} username={member?.username} />
                                 )
                             })
                         }
@@ -103,14 +120,10 @@ export default function page({params}) {
                 {/* Buttons */}
                 <div className="flex flex-col gap-[15px] mt-[20px]">
                     <button className="mx-auto w-[80%] bg-gradient-to-r from-[#00ff99] to-[#00995b] rounded-[20px] text-center py-3 text-white font-semibold text-xl active:scale-95 duration-100">Check-in / Check-out</button>
-                    <button className="flex justify-center items-center gap-[10px] mx-auto w-[80%] border-[#00ff99] border-[3px] rounded-[20px] text-center py-3 text-[#00ff99] font-semibold text-xl active:scale-95 duration-100" onClick={() => route.push(`/edit-trip/${hostCode}`)}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <path d="M11.0984 3.80369H5.4119C3.52756 3.80369 2 5.3312 2 7.21548V18.5882C2 20.4725 3.52756 22 5.4119 22H16.7849C18.6692 22 20.1968 20.4725 20.1968 18.5882L20.1968 12.9018M7.68649 16.3136L11.8244 15.4799C12.044 15.4356 12.2457 15.3274 12.4041 15.1689L21.6671 5.90116C22.1112 5.45682 22.1109 4.73657 21.6664 4.2926L19.7042 2.33264C19.2599 1.88886 18.54 1.88916 18.0961 2.33332L8.8321 11.6021C8.674 11.7602 8.56605 11.9615 8.52175 12.1807L7.68649 16.3136Z" stroke="#00E187" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>Edit trip</button>
+                    <button className="flex justify-center items-center gap-[10px] mx-auto w-[80%] border-[#00ff99] border-[3px] rounded-[20px] text-center py-3 text-[#00ff99] font-semibold text-xl active:scale-95 duration-100">
+                        My Profile</button>
                 </div>
             </div>
-
-            <button className="text-white bg-gray-600 py-2 px-4 rounded-lg w-fit mx-auto active:scale-95 duration-150 active:bg-gray-700">End Trip ( ชั่วคราว )</button>
         </div>
     )
 }
