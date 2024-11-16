@@ -3,7 +3,6 @@ import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import BackButton from '../components/BackButton'
 import Image from 'next/image'
-import CryptoJS from 'crypto-js'
 import { useAuth, useUser } from '@clerk/nextjs'
 import LoadingLogo from '../components/LoadingLogo'
 import emtpyUser from '../../public/EmptyUser.png'
@@ -40,17 +39,17 @@ export default function HostTripPage() {
   };
 
   const handleHost = async () => {
-    if(!user){
+    if (!user) {
       toast.error("Error occured while creating room.")
       return;
     }
 
     if (partyName == "" || tripTitle == "" || tripDescription == "" || from == "" || to == "") {
-        toast.error("You can't leave the field(s) empty !")
-        return;
+      toast.error("You can't leave the field(s) empty !")
+      return;
     }
 
-    if(!isAgreeTerms){
+    if (!isAgreeTerms) {
       toast.error("Please Check the term of services !")
       return;
     }
@@ -64,18 +63,26 @@ export default function HostTripPage() {
       to,
       isSchoolTrip,
       hostId: user?.id, // Assuming `user.id` is available from Clerk
-      partyMembers: []
+      partyMembers: [],
     };
 
-    try{
+    try {
       await addRoomMutation(roomData)
       toast.success("Room hosted successfully!")
       route.push(`../host-trip/${hostCode}`)
-    }catch(error:any){
-      console.error("error hosting room : ",error)
+    } catch (error: any) {
+      console.error("error hosting room : ", error)
       toast.error("Failed to host room!")
     }
-}
+  }
+
+  const textLimit = (text: string) => {
+    if (text.length >= 10) {
+      return text.slice(0, 10) + "..."
+    }
+
+    return text;
+  }
 
   if (!user) return <LoadingLogo />
 
@@ -135,8 +142,8 @@ export default function HostTripPage() {
 
           <div className='flex gap-[20px]'>
             <div className='flex flex-col'>
-              <Image src={`${user?.imageUrl}`} alt='User Image' width={60} height={60} className='rounded-full'></Image>
-              <span className='font-semibold text-sm text-center'>{user?.username}</span>
+              <Image src={`${user?.imageUrl}`} alt='User Image' width={60} height={60} className='rounded-full mx-auto'></Image>
+              <span className='font-semibold text-sm text-center'>{textLimit(user?.username || "")}</span>
             </div>
 
             <div className='flex flex-col'>

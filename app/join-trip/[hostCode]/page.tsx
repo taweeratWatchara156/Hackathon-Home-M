@@ -1,6 +1,5 @@
 "use client"
 
-import BackButton from '@/app/components/BackButton'
 import LoadingLogo from '@/app/components/LoadingLogo'
 import PartyMember from '@/app/components/PartyMember'
 import { api } from '@/convex/_generated/api'
@@ -8,7 +7,6 @@ import { useMutation, useQuery } from 'convex/react'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { useUser } from '@clerk/nextjs'
 
 export default function Page({ params }) {
@@ -22,8 +20,16 @@ export default function Page({ params }) {
     const [to, setTo] = useState("")
     const [hostId, setHostId] = useState("")
 
+    const textLimit = (text:string) => {
+        if(text.length >= 10){
+            return text.slice(0, 10) + "..."
+        }
+
+        return text;
+    }
+
     const route = useRouter();
-    const { hostCode } = React.use(params);
+    const { hostCode } : { hostCode:string} = React.use(params);
     const roomData = useQuery(api.room.getRoomByHostCode, { hostCode })
     const currentUserData = useQuery(api.user.getIn, { clerkId: user?.id as string })
 
@@ -66,7 +72,7 @@ export default function Page({ params }) {
         <div className='flex flex-col w-full h-full p-5 gap-[20px]'>
             <button className='flex items-center gap-[10px] w-fit active:scale-95 duration-150' onClick={() => handleBack()}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="9" height="15" viewBox="0 0 9 15" fill="none">
-                    <path d="M8 1L1 7.5L8 14" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M8 1L1 7.5L8 14" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
 
                 <h1 className='font-semibold text-white'>Back</h1>
@@ -94,7 +100,7 @@ export default function Page({ params }) {
                     <div className='flex gap-[20px]'>
                         <div className='flex flex-col'>
                             <Image src={`${hostData?.imageUrl}`} alt='User Image' width={60} height={60} className='rounded-full mx-auto'></Image>
-                            <span className='font-semibold text-sm text-center'>{hostData?.username}</span>
+                            <span className='font-semibold text-sm text-center'>{textLimit(hostData?.username)}</span>
                         </div>
                     </div>
                 </div>

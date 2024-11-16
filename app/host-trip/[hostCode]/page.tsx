@@ -1,19 +1,19 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import CryptoJS from 'crypto-js'
+import { use, useEffect, useState } from "react"
 import LoadingLogo from "@/app/components/LoadingLogo"
 import BackButton from "@/app/components/BackButton"
-import emptyUser from '../../../public/EmptyUser.png'
-import { useUser } from "@clerk/nextjs"
 import Image from 'next/image'
-import { useQuery } from "convex/react"
+import { useMutation, useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import React from 'react'
 import PartyMember from "@/app/components/PartyMember"
+import emptyUser from '../../../public/EmptyUser.png'
+import Link from "next/link"
 
-export default function page({params}) {
+export default function page({ params }) {
+    const deleteRoomMutation = useMutation(api.room.deleteRoomByHostCode)
     const [partyName, setPartyName] = useState("")
     const [tripTitle, setTripTitle] = useState("")
     const [tripDescription, setTripDescription] = useState("")
@@ -23,9 +23,16 @@ export default function page({params}) {
     const [hostId, setHostId] = useState("")
 
     const route = useRouter();
-    const {hostCode} = React.use(params);
-    const host = null;
+    const { hostCode } : {hostCode:string} = React.use(params);
     const roomData = useQuery(api.room.getRoomByHostCode, { hostCode })
+
+    const textLimit = (text: string) => {
+        if (text.length >= 10) {
+            return text.slice(0, 10) + "..."
+        }
+
+        return text;
+    }
 
     useEffect(() => {
 
@@ -40,14 +47,32 @@ export default function page({params}) {
         }
     }, [roomData]);
 
-    
     const hostData = useQuery(api.user.getIn, { clerkId: hostId })
+
+    const handleDelete = async () => {
+        try{
+            await deleteRoomMutation({ hostCode })
+            route.push('/../')
+        }catch(error:any){
+            console.log("Error occured while deleting room : ", error)
+        }
+    }
+
+    const handleBack = () => {
+
+    }
 
     if (!roomData || !hostData) return <LoadingLogo />
 
     return (
         <div className='flex flex-col w-full h-full p-5 gap-[20px]'>
-            <BackButton />
+            <Link href="/" className='flex items-center gap-[10px] w-fit active:scale-95 duration-150' onClick={() => handleDelete()}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="15" viewBox="0 0 9 15" fill="none">
+                    <path d="M8 1L1 7.5L8 14" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+
+                <h1 className='font-semibold text-white'>Back</h1>
+            </Link>
 
             {/* Trip Code */}
             <div className='flex flex-col mt-[10%]'>
@@ -77,7 +102,7 @@ export default function page({params}) {
                     <div className='flex gap-[20px]'>
                         <div className='flex flex-col'>
                             <Image src={`${hostData?.imageUrl}`} alt='User Image' width={60} height={60} className='rounded-full mx-auto'></Image>
-                            <span className='font-semibold text-sm text-center'>{hostData?.username}</span>
+                            <span className='font-semibold text-sm text-center'>{textLimit(hostData?.username)}</span>
                         </div>
                     </div>
                 </div>
@@ -86,14 +111,19 @@ export default function page({params}) {
                     {/* Title */}
                     <div className='flex justify-between mt-[20px]'>
                         <div className='font-semibold'>Party Members</div>
-                        <span className='text-xs mt-auto text-gray-400'>SEE ALL</span>
+                        <span className='text-xs mt-auto text-gray-400' onClick={() => route.push(`/host-trip/${hostCode}/see-all`)}>SEE ALL</span>
                     </div>
 
                     <div className='flex gap-[20px]'>
-                        {
+                        {partyMembers.length == 0 ?
+                            <div className='flex flex-col'>
+                                <Image src={emptyUser} alt='User Image' width={60} height={60} className='rounded-full'></Image>
+                                <span className='font-semibold text-sm text-center'></span>
+                            </div>
+                            :
                             partyMembers.map((member, index) => {
                                 return (
-                                    <PartyMember key={index} imageUrl={member.imageUrl} username={member?.username}/>
+                                    <PartyMember key={index} imageUrl={member.imageUrl} username={member?.username} />
                                 )
                             })
                         }
@@ -105,7 +135,7 @@ export default function page({params}) {
                     <button className="mx-auto w-[80%] bg-gradient-to-r from-[#00ff99] to-[#00995b] rounded-[20px] text-center py-3 text-white font-semibold text-xl active:scale-95 duration-100">Check-in / Check-out</button>
                     <button className="flex justify-center items-center gap-[10px] mx-auto w-[80%] border-[#00ff99] border-[3px] rounded-[20px] text-center py-3 text-[#00ff99] font-semibold text-xl active:scale-95 duration-100" onClick={() => route.push(`/edit-trip/${hostCode}`)}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <path d="M11.0984 3.80369H5.4119C3.52756 3.80369 2 5.3312 2 7.21548V18.5882C2 20.4725 3.52756 22 5.4119 22H16.7849C18.6692 22 20.1968 20.4725 20.1968 18.5882L20.1968 12.9018M7.68649 16.3136L11.8244 15.4799C12.044 15.4356 12.2457 15.3274 12.4041 15.1689L21.6671 5.90116C22.1112 5.45682 22.1109 4.73657 21.6664 4.2926L19.7042 2.33264C19.2599 1.88886 18.54 1.88916 18.0961 2.33332L8.8321 11.6021C8.674 11.7602 8.56605 11.9615 8.52175 12.1807L7.68649 16.3136Z" stroke="#00E187" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M11.0984 3.80369H5.4119C3.52756 3.80369 2 5.3312 2 7.21548V18.5882C2 20.4725 3.52756 22 5.4119 22H16.7849C18.6692 22 20.1968 20.4725 20.1968 18.5882L20.1968 12.9018M7.68649 16.3136L11.8244 15.4799C12.044 15.4356 12.2457 15.3274 12.4041 15.1689L21.6671 5.90116C22.1112 5.45682 22.1109 4.73657 21.6664 4.2926L19.7042 2.33264C19.2599 1.88886 18.54 1.88916 18.0961 2.33332L8.8321 11.6021C8.674 11.7602 8.56605 11.9615 8.52175 12.1807L7.68649 16.3136Z" stroke="#00E187" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>Edit trip</button>
                 </div>
             </div>

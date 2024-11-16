@@ -2,7 +2,6 @@
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
-import CryptoJS from 'crypto-js'
 import { useAuth, useUser } from '@clerk/nextjs'
 import emtpyUser from '../../../public/EmptyUser.png'
 import { Toaster, toast } from 'react-hot-toast';
@@ -92,7 +91,7 @@ export default function EditTripPage({ params }) {
             <div className='flex flex-col w-full h-[100%] p-5 gap-[20px]'>
                 <Link href={`/host-trip/${hostCode}`} className='flex items-center gap-[10px] w-fit active:scale-95 duration-150'>
                     <svg xmlns="http://www.w3.org/2000/svg" width="9" height="15" viewBox="0 0 9 15" fill="none">
-                        <path d="M8 1L1 7.5L8 14" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M8 1L1 7.5L8 14" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
 
                     <h1 className='font-semibold text-white'>Back</h1>
@@ -184,7 +183,7 @@ export default function EditTripPage({ params }) {
                 <div className='bg-white rounded-lg w-[80%] h-[45%] p-5'>
                     <div className='flex flex-row-reverse active:scale-95 duration-150' onClick={() => setIsDelete(false)}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 17 17" fill="none">
-                            <path d="M16 1L1 16M16 16L1 1" stroke="black" stroke-opacity="0.5" stroke-width="2" stroke-linecap="round" />
+                            <path d="M16 1L1 16M16 16L1 1" stroke="black" strokeOpacity="0.5" strokeWidth="2" strokeLinecap="round" />
                         </svg>
                     </div>
 

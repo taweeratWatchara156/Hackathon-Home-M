@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Clound from '../../../public/Clound.png'
 import { SignedOut, SignUp, useAuth } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
+import BackButton from '@/app/components/BackButton'
 
 
 
@@ -24,6 +25,10 @@ export default function SignUpPage() {
     return (
         <div className='w-full h-full'>
             {/* Top */}
+            <div className='m-5'>
+                <BackButton/>
+            </div>
+
             <div className='h-[45%] pt-[10%] relative'>
                 <MainLogo />
                 <Image src={Clound} alt='Clound' className='absolute bottom-[-1px] w-[100%]'></Image>

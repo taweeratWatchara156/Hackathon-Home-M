@@ -18,6 +18,7 @@ export const addRoom = mutation({
       imageUrl: v.string(),
       clerkId: v.string(),
       email: v.string(),
+      checkin: v.boolean()
   })),
   },
   handler: async (ctx, args) => {
