@@ -18,7 +18,13 @@ export default defineSchema({
         from: v.string(),
         to: v.string(),
         isSchoolTrip: v.boolean(),
-        hostId: v.string(), // Clerk ID of the host
+        hostMembers: v.array(v.object({
+            fullName: v.string(),
+            username: v.string(),
+            imageUrl: v.string(),
+            clerkId: v.string(),
+            email: v.string(),
+        })),
         partyMembers: v.array(v.object({
             fullName: v.string(),
             username: v.string(),

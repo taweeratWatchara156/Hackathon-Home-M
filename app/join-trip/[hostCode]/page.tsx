@@ -9,8 +9,8 @@ import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useUser } from '@clerk/nextjs'
 
-export default function Page({ params }) {
-    const {user} = useUser()
+export default function Page({ params }:{params:any}) {
+    const { user } = useUser()
     const updateRoomMutation = useMutation(api.room.updateRoom);
     const [partyName, setPartyName] = useState("")
     const [tripTitle, setTripTitle] = useState("")
@@ -18,32 +18,48 @@ export default function Page({ params }) {
     const [partyMembers, setPartyMembers] = useState<any[]>([])
     const [from, setFrom] = useState("")
     const [to, setTo] = useState("")
-    const [hostId, setHostId] = useState("")
-
-    const textLimit = (text:string) => {
-        if(text.length >= 10){
-            return text.slice(0, 10) + "..."
-        }
-
-        return text;
-    }
-
+    const [hostMembers, setHostMembers] = useState<any[]>([])
     const route = useRouter();
-    const { hostCode } : { hostCode:string} = React.use(params);
+    const { hostCode }: { hostCode: string } = React.use(params);
     const roomData = useQuery(api.room.getRoomByHostCode, { hostCode })
     const currentUserData = useQuery(api.user.getIn, { clerkId: user?.id as string })
+    
+    const checkIsHost = () => {
+        roomData?.hostMembers.map((member) => {
+            if(member.clerkId == user?.id) return true;
+        })
+
+        return false
+    }
 
     const handleBack = async () => {
-        const updateRoomData = {
-            hostCode,
-            memberToRemove: {
-                fullName: currentUserData?.fullName as string,
-                username: currentUserData?.username as string,
-                imageUrl: currentUserData?.imageUrl as string,
-                clerkId: currentUserData?.clerkId as string,
-                email: currentUserData?.email as string,
-            }
-        };
+        var updateRoomData;
+
+        if(checkIsHost()){
+            updateRoomData = {
+                hostCode,
+                hostMemberToRemove: {
+                    fullName: currentUserData?.fullName as string,
+                    username: currentUserData?.username as string,
+                    imageUrl: currentUserData?.imageUrl as string,
+                    clerkId: currentUserData?.clerkId as string,
+                    email: currentUserData?.email as string,
+                }
+            };
+        }else{
+            updateRoomData = {
+                hostCode,
+                memberToRemove: {
+                    fullName: currentUserData?.fullName as string,
+                    username: currentUserData?.username as string,
+                    imageUrl: currentUserData?.imageUrl as string,
+                    clerkId: currentUserData?.clerkId as string,
+                    email: currentUserData?.email as string,
+                }
+            };
+        }
+
+        
 
         if (roomData) {
             await updateRoomMutation(updateRoomData)
@@ -59,14 +75,11 @@ export default function Page({ params }) {
             setFrom(roomData.from);
             setTo(roomData.to);
             setPartyMembers(roomData.partyMembers);
-            setHostId(roomData.hostId)
+            setHostMembers(roomData.hostMembers)
         }
     }, [roomData]);
 
-
-    const hostData = useQuery(api.user.getIn, { clerkId: hostId })
-
-    if (!roomData || !hostData) return <LoadingLogo />
+    if (!roomData || hostMembers.length == 0) return <LoadingLogo />
 
     return (
         <div className='flex flex-col w-full h-full p-5 gap-[20px]'>
@@ -98,10 +111,13 @@ export default function Page({ params }) {
                     </div>
 
                     <div className='flex gap-[20px]'>
-                        <div className='flex flex-col'>
-                            <Image src={`${hostData?.imageUrl}`} alt='User Image' width={60} height={60} className='rounded-full mx-auto'></Image>
-                            <span className='font-semibold text-sm text-center'>{textLimit(hostData?.username)}</span>
-                        </div>
+                        {
+                            hostMembers.map((member, index) => {
+                                return (
+                                    <PartyMember key={index} imageUrl={member.imageUrl} username={member?.username} />
+                                )
+                            })
+                        }
                     </div>
                 </div>
 
@@ -125,8 +141,8 @@ export default function Page({ params }) {
 
                 {/* Buttons */}
                 <div className="flex flex-col gap-[15px] mt-[20px]">
-                    <button className="mx-auto w-[80%] bg-gradient-to-r from-[#00ff99] to-[#00995b] rounded-[20px] text-center py-3 text-white font-semibold text-xl active:scale-95 duration-100">Check-in / Check-out</button>
-                    <button className="flex justify-center items-center gap-[10px] mx-auto w-[80%] border-[#00ff99] border-[3px] rounded-[20px] text-center py-3 text-[#00ff99] font-semibold text-xl active:scale-95 duration-100">
+                    <button className="mx-auto w-[80%] bg-gradient-to-r from-[#00ff99] to-[#00995b] rounded-[20px] text-center py-3 text-white font-semibold text-xl active:scale-95 duration-100" onClick={() => route.push(`/join-trip/${hostCode}/check-in-out`)}>Check-in / Check-out</button>
+                    <button className="flex justify-center items-center gap-[10px] mx-auto w-[80%] border-[#00ff99] border-[3px] rounded-[20px] text-center py-3 text-[#00ff99] font-semibold text-xl active:scale-95 duration-100" onClick={() => route.push(`/join-trip/${hostCode}/my-profile`)}>
                         My Profile</button>
                 </div>
             </div>

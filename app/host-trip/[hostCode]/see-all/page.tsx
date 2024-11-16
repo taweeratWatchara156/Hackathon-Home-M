@@ -9,31 +9,34 @@ import { api } from '@/convex/_generated/api';
 import Image from 'next/image';
 import LoadingLogo from '@/app/components/LoadingLogo';
 import SeeAllUser from '@/app/components/SeeAllUserHost';
+import { Router } from 'next/router';
+import PartyMember from '@/app/components/PartyMember';
 
 export default function SeeAllPage({ params }: { params: any }) {
+    const route = useRouter()
     const { hostCode }: { hostCode: string } = React.use(params)
     const [partyMembers, setPartyMembers] = useState<any[]>([])
-    const [hostId, setHostId] = useState("")
+    const [hostMembers, setHostMembers] = useState<any[]>([])
     const roomData = useQuery(api.room.getRoomByHostCode, { hostCode })
 
     const textLimit = (text: string) => {
         if (text.length >= 10) {
             return text.slice(0, 10) + "..."
         }
+
+        return text;
     }
 
     useEffect(() => {
         if (roomData) {
             setPartyMembers(roomData.partyMembers);
-            setHostId(roomData.hostId)
+            setHostMembers(roomData.hostMembers)
         }
 
         console.log(partyMembers)
     }, [roomData]);
 
-    const hostData = useQuery(api.user.getIn, { clerkId: hostId })
-
-    if(!roomData || !hostData) return <LoadingLogo/>
+    if(!roomData || hostMembers.length == 0) return <LoadingLogo/>
 
     return (
         <div className='flex flex-col w-full h-[100%] p-5 gap-[20px] pb-[20px]'>
@@ -53,10 +56,13 @@ export default function SeeAllPage({ params }: { params: any }) {
                 </div>
 
                 <div className='flex gap-[20px] mt-[10px]'>
-                    <div className='flex flex-col'>
-                        <Image src={`${hostData?.imageUrl}`} alt='User Image' width={60} height={60} className='rounded-full mx-auto'></Image>
-                        <span className='font-semibold text-sm text-center'>{textLimit(hostData?.username || "")}</span>
-                    </div>
+                        {
+                            hostMembers.map((member, index) => {
+                                return (
+                                    <PartyMember key={index} imageUrl={member.imageUrl} username={member?.username} />
+                                )
+                            })
+                        }
                 </div>
 
 
@@ -69,11 +75,13 @@ export default function SeeAllPage({ params }: { params: any }) {
                     <div className='flex flex-col'>
                         {
                             partyMembers.map((member, index) => {
-                                return <SeeAllUser key={index} clerkId={member.clerkId} hostCode={hostCode}/>
+                                return <SeeAllUser key={index} index={index + 1} clerkId={member.clerkId} hostCode={hostCode}/>
                             })
                         }
                     </div>
                 </div>
+
+                <button className="mx-auto w-[70%] bg-gradient-to-r from-[#00ff99] mt-[20px] to-[#00995b] rounded-[20px] text-center py-3 text-white font-semibold text-xl active:scale-95 duration-100" onClick={() => route.push(`${window.location.pathname}/members-location`)}>Members Location</button>
             </div>
 
             <Toaster

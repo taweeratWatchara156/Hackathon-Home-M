@@ -8,7 +8,7 @@ import LoadingLogo from '../components/LoadingLogo'
 import emtpyUser from '../../public/EmptyUser.png'
 import { Toaster, toast } from 'react-hot-toast';
 import Link from 'next/link'
-import { useMutation } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 export default function HostTripPage() {
   const addRoomMutation = useMutation(api.room.addRoom);
@@ -38,6 +38,8 @@ export default function HostTripPage() {
     return `${randomNum}${randomStr}${Math.floor(Math.random() * 10)}`;
   };
 
+  const hostData = useQuery(api.user.getIn, { clerkId: user?.id as string })
+
   const handleHost = async () => {
     if (!user) {
       toast.error("Error occured while creating room.")
@@ -62,7 +64,15 @@ export default function HostTripPage() {
       from,
       to,
       isSchoolTrip,
-      hostId: user?.id, // Assuming `user.id` is available from Clerk
+      hostMembers: [
+        {
+          fullName: hostData?.fullName as string,
+          username: hostData?.username as string,
+          imageUrl: hostData?.imageUrl as string,
+          clerkId: hostData?.clerkId as string,
+          email: hostData?.email as string,
+        }
+      ],
       partyMembers: [],
     };
 

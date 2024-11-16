@@ -10,8 +10,9 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import LoadingLogo from '@/app/components/LoadingLogo'
 import '../../css/blur.css'
+import PartyMember from '@/app/components/PartyMember'
 
-export default function EditTripPage({ params }) {
+export default function EditTripPage({ params }: {params:any}) {
     const updateRoomMutation = useMutation(api.room.updateRoom);
     const deleteRoomMutation = useMutation(api.room.deleteRoomByHostCode);
     const route = useRouter();
@@ -21,12 +22,12 @@ export default function EditTripPage({ params }) {
     const [tripDescription, setTripDescription] = useState("")
     const [from, setFrom] = useState("")
     const [to, setTo] = useState("")
-    const [hostId, setHostId] = useState("")
+    const [hostMembers, setHostMembers] = useState<any[]>([])
     const [deleteInput, setDeleteInput] = useState("")
 
     const [isDelete, setIsDelete] = useState(false)
 
-    const hostCode = React.use(params).hostCode
+    const { hostCode } : { hostCode : string } = React.use(params)
     const roomData = useQuery(api.room.getRoomByHostCode, { hostCode })
 
     const handleDelete = async () => {
@@ -50,12 +51,9 @@ export default function EditTripPage({ params }) {
             setPartyName(roomData.partyName);
             setFrom(roomData.from);
             setTo(roomData.to);
-            setHostId(roomData.hostId)
+            setHostMembers(roomData.hostMembers)
         }
     }, [roomData]);
-
-
-    const hostData = useQuery(api.user.getIn, { clerkId: hostId })
 
     useEffect(() => {
         if (!user) {
@@ -84,7 +82,7 @@ export default function EditTripPage({ params }) {
         }
     }
 
-    if (!user || !hostData) return <LoadingLogo />
+    if (!user || hostMembers.length == 0) return <LoadingLogo />
 
     return (
         <>
@@ -148,23 +146,13 @@ export default function EditTripPage({ params }) {
                         </div>
 
                         <div className='flex gap-[20px]'>
-                            <div className='flex flex-col'>
-                                <Image src={`${hostData?.imageUrl}`} alt='User Image' width={60} height={60} className='rounded-full'></Image>
-                                <span className='font-semibold text-sm text-center'>{hostData?.username}</span>
-                            </div>
-
-                            <div className='flex flex-col'>
-                                <Image src={emtpyUser} alt='User Image' width={60} height={60} className='rounded-full'></Image>
-                                <span className='font-semibold text-sm text-center'></span>
-                            </div>
-                            <div className='flex flex-col'>
-                                <Image src={emtpyUser} alt='User Image' width={60} height={60} className='rounded-full'></Image>
-                                <span className='font-semibold text-sm text-center'></span>
-                            </div>
-                            <div className='flex flex-col'>
-                                <Image src={emtpyUser} alt='User Image' width={60} height={60} className='rounded-full'></Image>
-                                <span className='font-semibold text-sm text-center'></span>
-                            </div>
+                        {
+                            hostMembers.map((member, index) => {
+                                return (
+                                    <PartyMember key={index} imageUrl={member.imageUrl} username={member?.username} />
+                                )
+                            })
+                        }
                         </div>
                     </div>
 
